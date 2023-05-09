@@ -35,6 +35,33 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""MoveStick"",
+                    ""type"": ""Value"",
+                    ""id"": ""3fed1ab2-b284-4b6d-93d3-3c71d2b7b25a"",
+                    ""expectedControlType"": ""Stick"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Run"",
+                    ""type"": ""Button"",
+                    ""id"": ""35d5e85a-5e50-4c03-bbbb-ba87c8b02e4a"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Fight"",
+                    ""type"": ""Button"",
+                    ""id"": ""a2800dd6-32a2-487e-90f8-e84a55fd6094"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -92,6 +119,61 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""95596d69-27bb-46f6-96cb-81c57156d938"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""MoveStick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9145181b-c044-4744-addd-cc8f649832bb"",
+                    ""path"": ""<Keyboard>/shift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Run"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""392b9dfd-2d91-41f5-b579-ee494489ff96"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Run"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0902703b-064e-457f-8c28-9e17fca8c1bb"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Fight"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""08b047d7-e75e-43fd-a9e4-3b487b8b9659"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Fight"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -107,12 +189,26 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""isOR"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Gamepad"",
+            ""bindingGroup"": ""Gamepad"",
+            ""devices"": [
+                {
+                    ""devicePath"": ""<Gamepad>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                }
+            ]
         }
     ]
 }");
         // InGameActions
         m_InGameActions = asset.FindActionMap("InGameActions", throwIfNotFound: true);
         m_InGameActions_Move = m_InGameActions.FindAction("Move", throwIfNotFound: true);
+        m_InGameActions_MoveStick = m_InGameActions.FindAction("MoveStick", throwIfNotFound: true);
+        m_InGameActions_Run = m_InGameActions.FindAction("Run", throwIfNotFound: true);
+        m_InGameActions_Fight = m_InGameActions.FindAction("Fight", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -173,11 +269,17 @@ public partial class @Controls : IInputActionCollection2, IDisposable
     private readonly InputActionMap m_InGameActions;
     private IInGameActionsActions m_InGameActionsActionsCallbackInterface;
     private readonly InputAction m_InGameActions_Move;
+    private readonly InputAction m_InGameActions_MoveStick;
+    private readonly InputAction m_InGameActions_Run;
+    private readonly InputAction m_InGameActions_Fight;
     public struct InGameActionsActions
     {
         private @Controls m_Wrapper;
         public InGameActionsActions(@Controls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_InGameActions_Move;
+        public InputAction @MoveStick => m_Wrapper.m_InGameActions_MoveStick;
+        public InputAction @Run => m_Wrapper.m_InGameActions_Run;
+        public InputAction @Fight => m_Wrapper.m_InGameActions_Fight;
         public InputActionMap Get() { return m_Wrapper.m_InGameActions; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -190,6 +292,15 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 @Move.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnMove;
                 @Move.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnMove;
                 @Move.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnMove;
+                @MoveStick.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnMoveStick;
+                @MoveStick.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnMoveStick;
+                @MoveStick.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnMoveStick;
+                @Run.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnRun;
+                @Run.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnRun;
+                @Run.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnRun;
+                @Fight.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnFight;
+                @Fight.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnFight;
+                @Fight.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnFight;
             }
             m_Wrapper.m_InGameActionsActionsCallbackInterface = instance;
             if (instance != null)
@@ -197,6 +308,15 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 @Move.started += instance.OnMove;
                 @Move.performed += instance.OnMove;
                 @Move.canceled += instance.OnMove;
+                @MoveStick.started += instance.OnMoveStick;
+                @MoveStick.performed += instance.OnMoveStick;
+                @MoveStick.canceled += instance.OnMoveStick;
+                @Run.started += instance.OnRun;
+                @Run.performed += instance.OnRun;
+                @Run.canceled += instance.OnRun;
+                @Fight.started += instance.OnFight;
+                @Fight.performed += instance.OnFight;
+                @Fight.canceled += instance.OnFight;
             }
         }
     }
@@ -210,8 +330,20 @@ public partial class @Controls : IInputActionCollection2, IDisposable
             return asset.controlSchemes[m_KeyboardSchemeIndex];
         }
     }
+    private int m_GamepadSchemeIndex = -1;
+    public InputControlScheme GamepadScheme
+    {
+        get
+        {
+            if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.FindControlSchemeIndex("Gamepad");
+            return asset.controlSchemes[m_GamepadSchemeIndex];
+        }
+    }
     public interface IInGameActionsActions
     {
         void OnMove(InputAction.CallbackContext context);
+        void OnMoveStick(InputAction.CallbackContext context);
+        void OnRun(InputAction.CallbackContext context);
+        void OnFight(InputAction.CallbackContext context);
     }
 }
