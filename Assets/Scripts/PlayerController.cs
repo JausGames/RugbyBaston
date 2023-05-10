@@ -15,6 +15,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float rotationSpeed = 8f;
     [SerializeField] AnimationCurve rotationBySpeed;
     [SerializeField] AnimationCurve accelerationCurve;
+
+
     [Header("Walking")]
     [SerializeField] private float maxWalkingSpeed = 7f;
     [SerializeField] private float walkingVelocity = .3f;
@@ -30,16 +32,22 @@ public class PlayerController : MonoBehaviour
     Rigidbody body;
     Animator animator;
     private FiniteStateMachine<MovementStatus> fsm;
+    private bool rootmotion;
+    private AnimationClipRootMotionData currentRootMotionData;
+    [SerializeField] private bool tryRun;
 
     public bool Running { get => fsm.GetCurrentState().ID == MovementStatus.Running;}
+
+
     public bool Walking { get => fsm.GetCurrentState().ID == MovementStatus.Walking; }
     public bool Fighting { get => fsm.GetCurrentState().ID == MovementStatus.Fighting; }
 
-    enum MovementStatus
+    public enum MovementStatus
     {
         Walking,
         Running,
-        Fighting
+        Fighting,
+        Hurdle
     }
     // Start is called before the first frame update
     void Start()
@@ -85,13 +93,63 @@ public class PlayerController : MonoBehaviour
                 PlayAnimation(move.x, move.y);
             });
 
+        var hurdle = new State<MovementStatus>(MovementStatus.Hurdle, "Hurdle",
+            delegate {
+                SetAnimationLayer(MovementStatus.Walking);
+                animator.SetTrigger("Hurdle");
+            },
+            null,
+            null,
+            delegate {
+                ApplyRootMotion();
+            });
+
         fsm.Add(walk);
         fsm.Add(run);
         fsm.Add(fight);
+        fsm.Add(hurdle);
 
         fsm.SetCurrentState(walk);
     }
+    internal void SetState(MovementStatus state)
+    {
+        fsm.SetCurrentState(fsm.GetState(state));
+    }
 
+    void ApplyRootMotion()
+    {
+
+        if (rootmotion)
+        {
+
+            var curveX = currentRootMotionData.curveX;
+            var curveY = currentRootMotionData.curveY;
+            var curveZ = currentRootMotionData.curveZ;
+
+            var currentTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+
+            var xDelta = (curveX.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - curveX.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
+            var yDelta = (curveY.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - curveY.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
+            var zDelta = (curveZ.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - curveZ.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
+
+            var y = currentRootMotionData.speed * body.transform.up * yDelta;
+
+
+            var unclampedXZ = currentRootMotionData.speed * (body.transform.right * xDelta + body.transform.forward * zDelta);
+            var clampedXZ = Vector3.MoveTowards(
+                new Vector3(body.velocity.x, 0f, body.velocity.z),
+                currentRootMotionData.speed * (body.transform.right * xDelta + body.transform.forward * zDelta), 
+                .02f);
+
+            body.velocity = unclampedXZ.magnitude > clampedXZ.magnitude ? unclampedXZ + y: clampedXZ + y;
+        }
+    }
+
+    internal void SetRootMotion(bool value, AnimationClipRootMotionData data = null)
+    {
+        rootmotion = value;
+        currentRootMotionData = data;
+    }
 
     private void SetAnimationLayer(MovementStatus state)
     {
@@ -114,7 +172,11 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        Debug.Log("MovementStatus = " + fsm.GetCurrentState().ID);
+        if (tryRun)
+        {
+            tryRun = false;
+            SetRun(true);
+        }
         fsm.FixedUpdate();
     }
 
@@ -165,20 +227,44 @@ public class PlayerController : MonoBehaviour
         animator.SetFloat("SpeedX", Mathf.MoveTowards(animator.GetFloat("SpeedX"), speedX, .05f));
     }
 
-    public void SetMove(InputAction.CallbackContext context)
+    public void SetMove(Vector2 context)
     {
-        this.move = context.ReadValue<Vector2>();
+        this.move = context;
     }
-    public void SetRun(InputAction.CallbackContext context)
+    public void SetRun(bool context)
     {
-        if (context.performed)
-            fsm.SetCurrentState(fsm.GetState(MovementStatus.Running));
+
+        Debug.Log("SetRun = " + context);
+        if(fsm.GetCurrentState().ID == MovementStatus.Walking 
+            || fsm.GetCurrentState().ID == MovementStatus.Running 
+            || fsm.GetCurrentState().ID == MovementStatus.Fighting)
+        {
+            if (context)
+                fsm.SetCurrentState(fsm.GetState(MovementStatus.Running));
+            else
+                fsm.SetCurrentState(fsm.GetState(MovementStatus.Walking));
+        }
         else
-            fsm.SetCurrentState(fsm.GetState(MovementStatus.Walking));
+        {
+            if (context)
+                tryRun = true;
+            else
+                tryRun = false;
+        }
     }
-    public void SetFight(InputAction.CallbackContext context)
+    public void SetAMove(bool context)
     {
-        if (context.performed)
+        if (fsm.GetCurrentState().ID == MovementStatus.Walking)
+            fsm.SetCurrentState(fsm.GetState(MovementStatus.Hurdle));
+        else if (context && fsm.GetCurrentState().ID == MovementStatus.Running)
+        {
+            fsm.SetCurrentState(fsm.GetState(MovementStatus.Hurdle));
+            tryRun = true;
+        }
+    }
+    public void SetFight(bool context)
+    {
+        if (context)
             fsm.SetCurrentState(fsm.GetState(MovementStatus.Fighting));
         else
             fsm.SetCurrentState(fsm.GetState(MovementStatus.Walking));

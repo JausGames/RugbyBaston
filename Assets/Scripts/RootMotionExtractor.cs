@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class RootMotionExtractor : MonoBehaviour
 {
-    public AnimationClipRootMotionData OnAnimationChange(AnimationClip clip, float speed)
+    static public AnimationClipRootMotionData OnAnimationChange(AnimationClip clip, float speed)
     {
         //var clip = animator.GetCurrentAnimatorClipInfo(0)[0].clip;
 

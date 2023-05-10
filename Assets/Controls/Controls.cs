@@ -62,6 +62,15 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""A"",
+                    ""type"": ""Button"",
+                    ""id"": ""7a173e16-0221-4102-adb6-2e27b7a871a1"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -156,7 +165,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""0902703b-064e-457f-8c28-9e17fca8c1bb"",
-                    ""path"": ""<Keyboard>/space"",
+                    ""path"": ""<Mouse>/rightButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard"",
@@ -172,6 +181,17 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""Fight"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9de7cc40-c18a-4412-a53d-29539b046f06"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""A"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -209,6 +229,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
         m_InGameActions_MoveStick = m_InGameActions.FindAction("MoveStick", throwIfNotFound: true);
         m_InGameActions_Run = m_InGameActions.FindAction("Run", throwIfNotFound: true);
         m_InGameActions_Fight = m_InGameActions.FindAction("Fight", throwIfNotFound: true);
+        m_InGameActions_A = m_InGameActions.FindAction("A", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -272,6 +293,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
     private readonly InputAction m_InGameActions_MoveStick;
     private readonly InputAction m_InGameActions_Run;
     private readonly InputAction m_InGameActions_Fight;
+    private readonly InputAction m_InGameActions_A;
     public struct InGameActionsActions
     {
         private @Controls m_Wrapper;
@@ -280,6 +302,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
         public InputAction @MoveStick => m_Wrapper.m_InGameActions_MoveStick;
         public InputAction @Run => m_Wrapper.m_InGameActions_Run;
         public InputAction @Fight => m_Wrapper.m_InGameActions_Fight;
+        public InputAction @A => m_Wrapper.m_InGameActions_A;
         public InputActionMap Get() { return m_Wrapper.m_InGameActions; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -301,6 +324,9 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 @Fight.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnFight;
                 @Fight.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnFight;
                 @Fight.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnFight;
+                @A.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnA;
+                @A.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnA;
+                @A.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnA;
             }
             m_Wrapper.m_InGameActionsActionsCallbackInterface = instance;
             if (instance != null)
@@ -317,6 +343,9 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 @Fight.started += instance.OnFight;
                 @Fight.performed += instance.OnFight;
                 @Fight.canceled += instance.OnFight;
+                @A.started += instance.OnA;
+                @A.performed += instance.OnA;
+                @A.canceled += instance.OnA;
             }
         }
     }
@@ -345,5 +374,6 @@ public partial class @Controls : IInputActionCollection2, IDisposable
         void OnMoveStick(InputAction.CallbackContext context);
         void OnRun(InputAction.CallbackContext context);
         void OnFight(InputAction.CallbackContext context);
+        void OnA(InputAction.CallbackContext context);
     }
 }
