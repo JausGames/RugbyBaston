@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour
     private bool rootmotion;
     private AnimationClipRootMotionData currentRootMotionData;
     [SerializeField] private bool tryRun;
+    [SerializeField] private Vector3 baseRotation;
 
     public bool Running { get => fsm.GetCurrentState().ID == MovementStatus.Running;}
 
@@ -47,7 +48,9 @@ public class PlayerController : MonoBehaviour
         Walking,
         Running,
         Fighting,
-        Hurdle
+        Hurdle,
+        Spin,
+        Juke
     }
     // Start is called before the first frame update
     void Start()
@@ -104,13 +107,39 @@ public class PlayerController : MonoBehaviour
                 ApplyRootMotion();
             });
 
+        var spin = new State<MovementStatus>(MovementStatus.Spin, "Spin",
+            delegate {
+                SetAnimationLayer(MovementStatus.Walking);
+                animator.SetTrigger("SpinR");
+            },
+            null,
+            null,
+            delegate {
+                ApplyRootMotion();
+            });
+
+        var juke = new State<MovementStatus>(MovementStatus.Juke, "Juke",
+            delegate {
+                SetAnimationLayer(MovementStatus.Walking);
+                animator.SetTrigger("Juke");
+            },
+            null,
+            null,
+            delegate {
+                ApplyRootMotion();
+            });
+
         fsm.Add(walk);
         fsm.Add(run);
         fsm.Add(fight);
         fsm.Add(hurdle);
+        fsm.Add(spin);
+        fsm.Add(juke);
 
         fsm.SetCurrentState(walk);
     }
+
+
     internal void SetState(MovementStatus state)
     {
         fsm.SetCurrentState(fsm.GetState(state));
@@ -122,26 +151,49 @@ public class PlayerController : MonoBehaviour
         if (rootmotion)
         {
 
-            var curveX = currentRootMotionData.curveX;
-            var curveY = currentRootMotionData.curveY;
-            var curveZ = currentRootMotionData.curveZ;
+            var posX = currentRootMotionData.curvePosX;
+            var posY = currentRootMotionData.curvePosY;
+            var posZ = currentRootMotionData.curvePosZ;
+
+            var rotX = currentRootMotionData.curveRotX;
+            var rotY = currentRootMotionData.curveRotY;
+            var rotZ = currentRootMotionData.curveRotZ;
+            var rotW = currentRootMotionData.curveRotW;
 
             var currentTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
 
-            var xDelta = (curveX.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - curveX.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
-            var yDelta = (curveY.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - curveY.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
-            var zDelta = (curveZ.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - curveZ.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
+            var xPosDelta = (posX.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - posX.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
+            var yPosDelta = (posY.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - posY.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
+            var zPosDelta = (posZ.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - posZ.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
 
-            var y = currentRootMotionData.speed * body.transform.up * yDelta;
+            /*var xRotDelta = (rotX.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - rotX.Evaluate((currentTime * currentRootMotionData.length)));
+            var yRotDelta = (rotY.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - rotY.Evaluate((currentTime * currentRootMotionData.length)));
+            var zRotDelta = (rotZ.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - rotZ.Evaluate((currentTime * currentRootMotionData.length)));
+            var wRotDelta = (rotW.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - rotW.Evaluate((currentTime * currentRootMotionData.length)));*/
 
+            var xRotDelta = rotX.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
+            var yRotDelta = rotY.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
+            var zRotDelta = rotZ.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
+            var wRotDelta = rotW.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
 
-            var unclampedXZ = currentRootMotionData.speed * (body.transform.right * xDelta + body.transform.forward * zDelta);
+            var quat = new Quaternion(xRotDelta, yRotDelta, zRotDelta, wRotDelta);
+            var eulerAngle = quat.eulerAngles;
+
+            var y = currentRootMotionData.speed * body.transform.up * yPosDelta;
+
+            var unclampedXZ = currentRootMotionData.speed * (body.transform.right * xPosDelta + body.transform.forward * zPosDelta);
             var clampedXZ = Vector3.MoveTowards(
                 new Vector3(body.velocity.x, 0f, body.velocity.z),
-                currentRootMotionData.speed * (body.transform.right * xDelta + body.transform.forward * zDelta), 
+                currentRootMotionData.speed * (body.transform.right * xPosDelta + body.transform.forward * zPosDelta), 
                 .02f);
 
             body.velocity = unclampedXZ.magnitude > clampedXZ.magnitude ? unclampedXZ + y: clampedXZ + y;
+
+            //body.MoveRotation(Quaternion.Euler(0f, eulerAngle.y, 0f));
+
+            Debug.Log("PlayerController, eulerAngle = " + eulerAngle.y);
+            body.transform.eulerAngles = baseRotation + new Vector3(0f, eulerAngle.y, 0f);
+            //body.rotation *= Quaternion.Euler(0f, eulerAngle.y, 0f);
         }
     }
 
@@ -149,6 +201,11 @@ public class PlayerController : MonoBehaviour
     {
         rootmotion = value;
         currentRootMotionData = data;
+        if (value)
+            baseRotation = body.transform.eulerAngles;
+        else
+            baseRotation = Vector3.zero;
+
     }
 
     private void SetAnimationLayer(MovementStatus state)
@@ -259,6 +316,27 @@ public class PlayerController : MonoBehaviour
         else if (context && fsm.GetCurrentState().ID == MovementStatus.Running)
         {
             fsm.SetCurrentState(fsm.GetState(MovementStatus.Hurdle));
+            tryRun = true;
+        }
+    }
+    internal void SetXMove(bool context)
+    {
+        if (fsm.GetCurrentState().ID == MovementStatus.Walking)
+            fsm.SetCurrentState(fsm.GetState(MovementStatus.Spin));
+        else if (context && fsm.GetCurrentState().ID == MovementStatus.Running)
+        {
+            fsm.SetCurrentState(fsm.GetState(MovementStatus.Spin));
+            tryRun = true;
+        }
+    }
+
+    internal void SetBMove(bool context)
+    {
+        if (fsm.GetCurrentState().ID == MovementStatus.Walking)
+            fsm.SetCurrentState(fsm.GetState(MovementStatus.Juke));
+        else if (context && fsm.GetCurrentState().ID == MovementStatus.Running)
+        {
+            fsm.SetCurrentState(fsm.GetState(MovementStatus.Juke));
             tryRun = true;
         }
     }

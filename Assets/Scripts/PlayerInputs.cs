@@ -31,7 +31,14 @@ public class PlayerInputs : MonoBehaviour
 
         InputsManager.Controls.InGameActions.A.performed += _ => OnA(true);
         InputsManager.Controls.InGameActions.A.canceled += _ => OnA(false);
+
+        InputsManager.Controls.InGameActions.X.performed += _ => OnX(true);
+        InputsManager.Controls.InGameActions.X.canceled += _ => OnX(false);
+
+        InputsManager.Controls.InGameActions.B.performed += _ => OnB(true);
+        InputsManager.Controls.InGameActions.B.canceled += _ => OnB(false);
     }
+
 
     private void OnFightStance(bool v)
     {
@@ -49,5 +56,14 @@ public class PlayerInputs : MonoBehaviour
     public void OnA(bool v)
     {
         motor.SetAMove(v);
+    }
+    private void OnB(bool v)
+    {
+        motor.SetBMove(v);
+    }
+
+    private void OnX(bool v)
+    {
+        motor.SetXMove(v);
     }
 }
