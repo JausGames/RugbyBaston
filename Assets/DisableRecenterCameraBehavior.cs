@@ -2,35 +2,34 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ActivateRootMotionBehavior : StateMachineBehaviour
+public class DisableRecenterCameraBehavior : StateMachineBehaviour
 {
+    private PlayerController controller;
 
-    [SerializeField] AnimationClip clip;
-    [SerializeField] float speed;
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        var controller = animator.GetComponentInParent<PlayerController>();
-        RootMotionExtractor.OnAnimationChange(clip, speed);
-        controller.SetRootMotion(true, RootMotionExtractor.OnAnimationChange(clip, speed));
+        /*if (!controller)
+            controller = animator.GetComponentInParent<PlayerController>();
+
+
+        if(!controller.GetRecenteringCamera())
+            controller.KeepRecenteringCameraDisable();
+        else
+            controller.SetRecenteringCamera(false);*/
     }
 
     // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     //override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     //{
-    //
+    //    
     //}
 
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        var controller = animator.GetComponentInParent<PlayerController>();
-        if (animator.GetCurrentAnimatorClipInfo(layerIndex)[0].clip.name == clip.name) return;
-        controller.SetRootMotion(false);
-        /*if (controller.GetState() != PlayerController.MovementStatus.Walking)
-        {
-            controller.SetState(PlayerController.MovementStatus.Walking);
-        }*/
+        /*var controller = animator.GetComponentInParent<PlayerController>();
+        controller.SetRecenteringCamera(true);*/
     }
 
     // OnStateMove is called right after Animator.OnAnimatorMove()

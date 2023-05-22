@@ -36,15 +36,19 @@ public class PlayerController : MonoBehaviour
     Rigidbody body;
     Animator animator;
     [SerializeField] private FiniteStateMachine<MovementStatus> fsm;
-    private bool rootmotion;
     private bool canCancel;
+
+    // start : Old root motion system, can be deleted
+    private bool rootmotion;
     private AnimationClipRootMotionData currentRootMotionData;
     private bool animationHasBegun;
     private bool tryRun;
     private Vector3 baseVisualRotation;
      private Quaternion baseRotation;
-    [SerializeField] private float differenceAngle;
-    private bool keepRootMotion;
+    private float differenceAngle;
+    // end
+
+    [SerializeField] private bool keepRecenteringDisable;
 
     public bool Running { get => fsm.GetCurrentState().ID == MovementStatus.Running;}
 
@@ -53,6 +57,7 @@ public class PlayerController : MonoBehaviour
     public bool Fighting { get => fsm.GetCurrentState().ID == MovementStatus.Fighting; }
     public bool Rootmotion { get => rootmotion; set => rootmotion = value; }
     public bool CanCancel { get => canCancel; set => canCancel = value; }
+    public bool TryRun { get => tryRun; }
 
     public enum MovementStatus
     {
@@ -75,7 +80,7 @@ public class PlayerController : MonoBehaviour
 
             delegate {
                 SetAnimationLayer(MovementStatus.Walking);
-                UpdateCamera(.1f);
+                SetRecenteringCamera(true);
             },
             null,
             delegate {
@@ -98,6 +103,7 @@ public class PlayerController : MonoBehaviour
 
             delegate {
                 SetAnimationLayer(MovementStatus.Running);
+                SetRecenteringCamera(true);
             },
             null,
             delegate {
@@ -120,6 +126,7 @@ public class PlayerController : MonoBehaviour
         var fight = new State<MovementStatus>(MovementStatus.Fighting, "Fighting",
             delegate {
                 SetAnimationLayer(MovementStatus.Fighting);
+                SetRecenteringCamera(true);
             },
             null,
             delegate {
@@ -157,6 +164,7 @@ public class PlayerController : MonoBehaviour
                 SetAnimationLayer(MovementStatus.Walking);
                 animator.SetTrigger("SpinR");
                 UpdateCamera(2f);
+                SetRecenteringCamera(false);
             },
             null,
             delegate {
@@ -218,6 +226,23 @@ public class PlayerController : MonoBehaviour
             else
                 rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f + magnitude / maxRunningSpeed;
         }
+    }
+    public void SetRecenteringCamera(bool recenter)
+    {
+        if (recenter && !camera.m_RecenterToTargetHeading.m_enabled && keepRecenteringDisable)
+        {
+            keepRecenteringDisable = false;
+            return;
+        }
+        camera.m_RecenterToTargetHeading.m_enabled = recenter;
+    }
+    public bool GetRecenteringCamera()
+    {
+        return camera.m_RecenterToTargetHeading.m_enabled;
+    }
+    public void KeepRecenteringCameraDisable()
+    {
+        keepRecenteringDisable = true;
     }
 
     internal void SetState(MovementStatus state)
@@ -312,7 +337,7 @@ public class PlayerController : MonoBehaviour
 
     internal void SetRootMotion(bool value, AnimationClipRootMotionData data = null)
     {
-        Debug.Log("PlayerController, SetRootMotion : value = " + value + ", keepRootMotion = " + keepRootMotion);
+        Debug.Log("PlayerController, SetRootMotion : value = " + value + ", keepRecenteringDisable = " + keepRecenteringDisable);
         if (value && !rootmotion)
         {
             rootmotion = value;
@@ -323,7 +348,7 @@ public class PlayerController : MonoBehaviour
             //baseRotation = body.transform.GetChild(0).rotation;
             differenceAngle = 0f;
         }
-        else if (!keepRootMotion)
+        else if (!keepRecenteringDisable)
         {
             rootmotion = value;
             currentRootMotionData = data;
@@ -334,7 +359,7 @@ public class PlayerController : MonoBehaviour
             differenceAngle = 0f;
         }
         else
-            keepRootMotion = false;
+            keepRecenteringDisable = false;
 
 
     }
@@ -342,7 +367,7 @@ public class PlayerController : MonoBehaviour
     {
         if (value)
         {
-            keepRootMotion = value;
+            keepRecenteringDisable = value;
             currentRootMotionData = animationClipRootMotionData;
             baseVisualRotation = body.transform.GetChild(0).eulerAngles;
             baseRotation = body.transform.rotation;
@@ -441,7 +466,7 @@ public class PlayerController : MonoBehaviour
     {
 
         Debug.Log("SetRun = " + context);
-        if(fsm.GetCurrentState().ID == MovementStatus.Walking 
+        if(fsm.GetCurrentState().TransitionAllowedList.Contains(MovementStatus.Running) 
             || fsm.GetCurrentState().ID == MovementStatus.Running)
         {
             if (context)
