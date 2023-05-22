@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-
+using UnityEngine;
 
 /// <summary>
 /// Our objective is to implement a finite state machine using 
@@ -21,15 +21,20 @@ using System.Collections.Generic;
 /// This is the class that will manage all the states and the transitions.
 /// </summary>
 
-    public class State<T>
+[System.Serializable]
+public class State<T>
     {
-        // The name for the state.
-        public string Name { get; set; }
+    // The name for the state.
+    [SerializeField]
+    private string name;
+    private List<T> transitionAllowedList = new List<T>();
 
-        // The ID of the state.
-        public T ID { get; private set; }
+    // The ID of the state.
+    public T ID { get; private set; }
+    public string Name { get => name; set => name = value; }
+    public List<T> TransitionAllowedList { get => transitionAllowedList; set => transitionAllowedList = value; }
 
-        public State(T id)
+    public State(T id)
         {
             ID = id;
         }

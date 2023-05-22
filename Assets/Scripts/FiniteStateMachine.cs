@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
-    public class FiniteStateMachine<T>
+[System.Serializable]
+public class FiniteStateMachine<T>
     {
         // A Finite State Machine
         //    - consists of a set of states,
@@ -12,8 +14,9 @@ using System.Text;
         // A dictionary to represent the a set of states.
         protected Dictionary<T, State<T>> mStates;
 
-        // The current state.
-        protected State<T> mCurrentState;
+    [SerializeField]
+    // The current state.
+    protected State<T> mCurrentState;
 
         public FiniteStateMachine()
         {
@@ -50,7 +53,7 @@ using System.Text;
 
         public void SetCurrentState(State<T> state)
         {
-            if (mCurrentState == state)
+            if (mCurrentState == state || (mCurrentState != null && !mCurrentState.TransitionAllowedList.Contains(state.ID)))
             {
                 return;
             }
@@ -61,6 +64,7 @@ using System.Text;
             }
 
             mCurrentState = state;
+            Debug.Log("FiniteStateMachine : state = " + state.ID);
 
             if (mCurrentState != null)
             {

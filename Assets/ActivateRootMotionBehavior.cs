@@ -27,7 +27,10 @@ public class ActivateRootMotionBehavior : StateMachineBehaviour
         var controller = animator.GetComponentInParent<PlayerController>();
         if (animator.GetCurrentAnimatorClipInfo(layerIndex)[0].clip.name == clip.name) return;
         controller.SetRootMotion(false);
-        controller.SetState(PlayerController.MovementStatus.Walking);
+        /*if (controller.GetState() != PlayerController.MovementStatus.Walking)
+        {
+            controller.SetState(PlayerController.MovementStatus.Walking);
+        }*/
     }
 
     // OnStateMove is called right after Animator.OnAnimatorMove()

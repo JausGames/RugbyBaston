@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class RootMotionExtractor : MonoBehaviour
 {
@@ -8,12 +9,13 @@ public class RootMotionExtractor : MonoBehaviour
     {
         //var clip = animator.GetCurrentAnimatorClipInfo(0)[0].clip;
 
-        var curveBindings = UnityEditor.AnimationUtility.GetCurveBindings(clip);
+        var curveBindings = AnimationUtility.GetCurveBindings(clip);
 
         //var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         var currentRootMotionData = new AnimationClipRootMotionData();
         currentRootMotionData.length = clip.length;
         currentRootMotionData.speed = speed;
+        currentRootMotionData.clipName = clip.name;
 
         foreach (var curveBinding in curveBindings)
         {
@@ -31,7 +33,7 @@ public class RootMotionExtractor : MonoBehaviour
 
         return currentRootMotionData;
     }
-    public AnimationClip FindAnimation(string name, Animator animator)
+    static public AnimationClip FindAnimation(string name, Animator animator)
     {
         foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
         {
@@ -55,4 +57,5 @@ public class AnimationClipRootMotionData
     public AnimationCurve curveRotW;
     public float length;
     public float speed;
+    public string clipName;
 }

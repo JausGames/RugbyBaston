@@ -24,7 +24,7 @@ public class PlayerInputs : MonoBehaviour
         InputsManager.Controls.InGameActions.MoveStick.canceled += _ => OnMove(Vector2.zero);
 
         InputsManager.Controls.InGameActions.Fight.performed += _ => OnFightStance(true);
-        InputsManager.Controls.InGameActions.Move.canceled += _ => OnFightStance(false);
+        InputsManager.Controls.InGameActions.Fight.canceled += _ => OnFightStance(false);
 
         InputsManager.Controls.InGameActions.Run.performed += _ => OnSprint(true);
         InputsManager.Controls.InGameActions.Run.canceled += _ => OnSprint(false);
