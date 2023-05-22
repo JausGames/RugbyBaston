@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float runningBrake = 1.5f;
     [SerializeField] float runningDirBrakePow = .01f;
     [SerializeField] float runningReDirectionForce = .4f;
-    [SerializeField] CinemachineVirtualCamera camera;
+    [SerializeField] CinemachineFreeLook camera;
 
 
     [SerializeField] float rotationSpeed = 8f;
@@ -199,19 +199,25 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateCamera(float horizontalDamping, float cameraDistance = 3f)
     {
-        var composer = camera.GetCinemachineComponent<CinemachineComposer>();
-        var thirdPersonFollow = camera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
-        composer.m_HorizontalDamping = Mathf.MoveTowards(composer.m_HorizontalDamping, horizontalDamping, 50f * Time.deltaTime);
-        thirdPersonFollow.CameraDistance = Mathf.MoveTowards(thirdPersonFollow.CameraDistance, cameraDistance, 4f * Time.deltaTime);
+        //var composer = camera.GetCinemachineComponent<CinemachineComposer>();
+        //var thirdPersonFollow = camera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+        //composer.m_HorizontalDamping = Mathf.MoveTowards(composer.m_HorizontalDamping, horizontalDamping, 50f * Time.deltaTime);
+        //thirdPersonFollow.CameraDistance = Mathf.MoveTowards(thirdPersonFollow.CameraDistance, cameraDistance, 4f * Time.deltaTime);
     }
 
     private void SetCinemachineNoiseIntensity(float magnitude)
     {
-        camera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = .5f + magnitude / maxRunningSpeed;
-        if(fsm.GetCurrentState().ID == MovementStatus.Walking)
-            camera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f;
-        else
-            camera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f + magnitude / maxRunningSpeed;
+        for(int i = 0; i < 3; i++)
+        {
+            Debug.Log("SetCinemachineNoiseIntensity : i = " + i);
+            var rig = camera.GetRig(i);
+            rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = .5f + magnitude / maxRunningSpeed;
+
+            if (fsm.GetCurrentState().ID == MovementStatus.Walking)
+                rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f;
+            else
+                rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f + magnitude / maxRunningSpeed;
+        }
     }
 
     internal void SetState(MovementStatus state)
