@@ -219,11 +219,11 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("SetCinemachineNoiseIntensity : i = " + i);
             var rig = camera.GetRig(i);
-            rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = .5f + magnitude / maxRunningSpeed;
+            //rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = .5f + magnitude / maxRunningSpeed;
 
-            if (fsm.GetCurrentState().ID == MovementStatus.Walking)
+            /*if (fsm.GetCurrentState().ID == MovementStatus.Walking)
                 rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f;
-            else
+            else*/
                 rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = .5f + magnitude / maxRunningSpeed;
         }
     }
@@ -252,128 +252,6 @@ public class PlayerController : MonoBehaviour
     internal MovementStatus GetState()
     {
         return fsm.GetCurrentState().ID;
-    }
-
-    void ApplyRootMotion(bool clamp)
-    {
-
-        if (rootmotion)
-        {
-            var posX = currentRootMotionData.curvePosX;
-            var posY = currentRootMotionData.curvePosY;
-            var posZ = currentRootMotionData.curvePosZ;
-
-            var rotX = currentRootMotionData.curveRotX;
-            var rotY = currentRootMotionData.curveRotY;
-            var rotZ = currentRootMotionData.curveRotZ;
-            var rotW = currentRootMotionData.curveRotW;
-
-            float currentTime;
-
-            Debug.Log("PlayerController, request clip = " + Animator.StringToHash(currentRootMotionData.clipName));
-            Debug.Log("PlayerController, current = " + animator.GetCurrentAnimatorStateInfo(0).shortNameHash);
-            Debug.Log("PlayerController, next = " + animator.GetNextAnimatorStateInfo(0).shortNameHash);
-
-            if (animator.GetCurrentAnimatorStateInfo(0).IsName(currentRootMotionData.clipName))
-                currentTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
-            else if (animator.GetNextAnimatorStateInfo(0).IsName(currentRootMotionData.clipName))
-                currentTime = animator.GetNextAnimatorStateInfo(0).normalizedTime;
-            else 
-                return;
-
-            //Debug.Log("PlayerController, currentTime = " + currentTime);
-
-            var xPosDelta = (posX.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - posX.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
-            var yPosDelta = (posY.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - posY.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
-            var zPosDelta = (posZ.Evaluate(currentTime * currentRootMotionData.length + Time.fixedDeltaTime) - posZ.Evaluate((currentTime * currentRootMotionData.length))) / Time.fixedDeltaTime;
-
-            var xRotDelta = rotX.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
-            var yRotDelta = rotY.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
-            var zRotDelta = rotZ.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
-            var wRotDelta = rotW.Evaluate(currentTime * currentRootMotionData.length) * Time.fixedDeltaTime;
-
-            var quat = new Quaternion(xRotDelta, yRotDelta, zRotDelta, wRotDelta);
-            var eulerAngle = quat.eulerAngles;
-
-            var x = currentRootMotionData.speed *(body.transform.right * xPosDelta);
-            var y = currentRootMotionData.speed *(body.transform.up * yPosDelta);
-            y = Vector3.zero;
-
-            var originRot = new Quaternion(currentRootMotionData.curveRotX.Evaluate(0), currentRootMotionData.curveRotZ.Evaluate(0), currentRootMotionData.curveRotZ.Evaluate(0), currentRootMotionData.curveRotW.Evaluate(0));
-            var originY = Quaternion.Euler(0, differenceAngle, 0);
-
-            var unclampedZ = currentRootMotionData.speed * (body.transform.forward * zPosDelta);
-            //var unclampedZ = currentRootMotionData.speed * (body.transform.forward * zPosDelta) + differenceAngle * Vector3.up;
-            var clampedZ = Vector3.MoveTowards(
-                new Vector3(0f, 0f, body.velocity.z),
-                unclampedZ, 
-                .02f);
-
-            var xRotFinal = rotX.Evaluate(currentRootMotionData.length) * Time.fixedDeltaTime;
-            var yRotFinal = rotY.Evaluate(currentRootMotionData.length) * Time.fixedDeltaTime;
-            var zRotFinal = rotZ.Evaluate(currentRootMotionData.length) * Time.fixedDeltaTime;
-            var wRotFinal = rotW.Evaluate(currentRootMotionData.length) * Time.fixedDeltaTime;
-
-
-            var finalQuat = new Quaternion(xRotFinal, yRotFinal, zRotFinal, wRotFinal);
-            var finalEulerAngle = finalQuat.eulerAngles;
-            finalEulerAngle.x = 0f;
-            finalEulerAngle.z = 0f;
-
-            Debug.DrawRay(transform.position + Vector3.up * 1.7f, (unclampedZ.magnitude > clampedZ.magnitude || !clamp ? unclampedZ + y + x : clampedZ + y + x) * 0.3f, Color.blue);
-            Debug.DrawRay(transform.position + Vector3.up * 1f, originY * (unclampedZ.magnitude > clampedZ.magnitude || !clamp ? unclampedZ + y + x : clampedZ + y + x), Color.red);
-            //Debug.DrawRay(transform.position + Vector3.up * 2f, unclampedZ.magnitude > clampedZ.magnitude || !clamp ? unclampedZ + y + x : clampedZ + y + x, Color.red);
-
-            body.velocity = originY * (unclampedZ.magnitude > clampedZ.magnitude || !clamp ? unclampedZ + y + x: clampedZ + y + x);
-
-            body.transform.rotation = Quaternion.Slerp(baseRotation, originY * baseRotation * Quaternion.Euler(finalEulerAngle).normalized, currentTime);
-            /*body.transform.rotation = Quaternion.RotateTowards(body.transform.rotation, 
-                baseRotation * Quaternion.Euler(finalEulerAngle).normalized, 
-                (Time.fixedDeltaTime * currentRootMotionData.length) * 10f * currentRootMotionData.speed);*/
-
-            body.transform.GetChild(0).eulerAngles = originY * (baseVisualRotation + new Vector3(0f, eulerAngle.y, 0f));
-        }
-    }
-
-    internal void SetRootMotion(bool value, AnimationClipRootMotionData data = null)
-    {
-        Debug.Log("PlayerController, SetRootMotion : value = " + value + ", keepRecenteringDisable = " + keepRecenteringDisable);
-        if (value && !rootmotion)
-        {
-            rootmotion = value;
-            currentRootMotionData = data;
-            animationHasBegun = false;
-            baseVisualRotation = body.transform.GetChild(0).eulerAngles;
-            baseRotation = body.transform.rotation;
-            //baseRotation = body.transform.GetChild(0).rotation;
-            differenceAngle = 0f;
-        }
-        else if (!keepRecenteringDisable)
-        {
-            rootmotion = value;
-            currentRootMotionData = data;
-            body.rotation = body.transform.GetChild(0).rotation;
-            body.transform.GetChild(0).localRotation = Quaternion.identity;
-            baseVisualRotation = body.transform.GetChild(0).eulerAngles;
-            baseRotation = Quaternion.identity;
-            differenceAngle = 0f;
-        }
-        else
-            keepRecenteringDisable = false;
-
-
-    }
-    internal void SetKeepRootMotion(bool value, AnimationClipRootMotionData animationClipRootMotionData)
-    {
-        if (value)
-        {
-            keepRecenteringDisable = value;
-            currentRootMotionData = animationClipRootMotionData;
-            baseVisualRotation = body.transform.GetChild(0).eulerAngles;
-            baseRotation = body.transform.rotation;
-            //baseRotation = body.transform.GetChild(0).rotation;
-            differenceAngle = Quaternion.Angle(transform.rotation, body.transform.GetChild(0).rotation);
-        }
     }
 
     private void SetAnimationLayer(MovementStatus state)
@@ -466,7 +344,7 @@ public class PlayerController : MonoBehaviour
     {
 
         Debug.Log("SetRun = " + context);
-        if(fsm.GetCurrentState().TransitionAllowedList.Contains(MovementStatus.Running) 
+        if(fsm.GetCurrentState().ID == MovementStatus.Walking
             || fsm.GetCurrentState().ID == MovementStatus.Running)
         {
             if (context)
