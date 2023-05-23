@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.VFX;
 
 public class PlayerController : MonoBehaviour
 {
@@ -14,9 +15,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float runningDirBrakePow = .01f;
     [SerializeField] float runningReDirectionForce = .4f;
     [SerializeField] CinemachineFreeLook camera;
+    [SerializeField] VisualEffect vfx;
 
 
     [SerializeField] float rotationSpeed = 8f;
+
+
     [SerializeField] AnimationCurve rotationBySpeed;
     [SerializeField] AnimationCurve accelerationCurve;
 
@@ -49,6 +53,7 @@ public class PlayerController : MonoBehaviour
     // end
 
     [SerializeField] private bool keepRecenteringDisable;
+    private BiasOffset biasOffset;
 
     public bool Running { get => fsm.GetCurrentState().ID == MovementStatus.Running;}
 
@@ -68,7 +73,10 @@ public class PlayerController : MonoBehaviour
         Spin,
         Juke
     }
-    // Start is called before the first frame update
+    internal void SetBiasOffset(float finalBias, float duration)
+    {
+        biasOffset = new BiasOffset(finalBias, duration, camera.m_Heading.m_Bias);
+    }
     void Start()
     {
         body = GetComponentInChildren<Rigidbody>();
@@ -92,6 +100,7 @@ public class PlayerController : MonoBehaviour
                 //ChangeVelocity(maxWalkingSpeed, walkingVelocity, walkingReDirectionForce, walkingDirBrakePow);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
                 PlayAnimation(move.x / 2f, move.y / 2f);
+                UpdateVfx();
             });
         walk.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Running,
@@ -107,7 +116,7 @@ public class PlayerController : MonoBehaviour
             },
             null,
             delegate {
-                UpdateCamera(.1f, 1.5f);
+                UpdateCamera(.1f, 2.2f, 1.9f);
             },
             delegate {
                 //ApplyRootMotion(true);
@@ -115,6 +124,7 @@ public class PlayerController : MonoBehaviour
                 //ChangeVelocity(maxRunningSpeed, runningVelocity, runningReDirectionForce, runningDirBrakePow);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
                 PlayAnimation(move.x, move.y);
+                UpdateVfx();
             });
         run.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Walking,
@@ -150,6 +160,7 @@ public class PlayerController : MonoBehaviour
             null,
             delegate {
                 UpdateCamera(2f);
+                UpdateVfx();
             },
             delegate {
                 //ApplyRootMotion(true);
@@ -169,6 +180,7 @@ public class PlayerController : MonoBehaviour
             null,
             delegate {
                 UpdateCamera(2f);
+                UpdateVfx();
             },
             delegate {
                 //ApplyRootMotion(false);
@@ -186,6 +198,7 @@ public class PlayerController : MonoBehaviour
             null,
             delegate {
                 UpdateCamera(2f);
+                UpdateVfx();
             },
             delegate {
                 //ApplyRootMotion(false);
@@ -205,19 +218,52 @@ public class PlayerController : MonoBehaviour
         fsm.SetCurrentState(walk);
     }
 
-    private void UpdateCamera(float horizontalDamping, float cameraDistance = 3f)
+    private void UpdateVfx()
+    {
+        var minSpeed = 4.4f;
+        var maxSpeed = 8f;
+
+        var value = Mathf.Max(0f, (-minSpeed + body.velocity.magnitude) / (-minSpeed + maxSpeed));
+
+        if(Running)
+        {
+            vfx.SetFloat("SpawnRate", Mathf.MoveTowards(vfx.GetFloat("SpawnRate"), value * 110f, 90f * Time.deltaTime));
+            vfx.SetVector2("YScaleRange", Vector2.MoveTowards(vfx.GetVector2("YScaleRange"), new Vector2(value * .3f + .05f, value * .6f + .1f), 0.65f * Time.deltaTime));
+        }
+        else
+        {
+            vfx.SetFloat("SpawnRate", Mathf.MoveTowards(vfx.GetFloat("SpawnRate"), 0f, 120f * Time.deltaTime));
+            vfx.SetVector2("YScaleRange", Vector2.MoveTowards(vfx.GetVector2("YScaleRange"), new Vector2(.05f, .1f), 0.90f * Time.deltaTime));
+        }
+
+        //Debug.Log("Value = " + value);
+        //vfx.SetVector2("YScaleRange", Vector2.MoveTowards(vfx.GetVector2("YScaleRange"), new Vector2(value * .3f + .1f, value * .6f + .2f), .5f * Time.deltaTime));
+        //vfx.SetFloat("Radius", Mathf.Min(1.6f, ((-minSpeed + maxSpeed) / (-minSpeed + body.velocity.magnitude)) * 1.1f));
+    }
+
+    private void UpdateCamera(float horizontalDamping, float cameraDistance = 4.2f, float cameraHeight = 2.6f)
     {
         //var composer = camera.GetCinemachineComponent<CinemachineComposer>();
         //var thirdPersonFollow = camera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
         //composer.m_HorizontalDamping = Mathf.MoveTowards(composer.m_HorizontalDamping, horizontalDamping, 50f * Time.deltaTime);
         //thirdPersonFollow.CameraDistance = Mathf.MoveTowards(thirdPersonFollow.CameraDistance, cameraDistance, 4f * Time.deltaTime);
+
+        camera.m_Orbits[1].m_Height = Mathf.MoveTowards(camera.m_Orbits[1].m_Height, cameraHeight, 1.5f * Time.deltaTime);
+        camera.m_Orbits[1].m_Radius = Mathf.MoveTowards(camera.m_Orbits[1].m_Radius, cameraDistance, 4f * Time.deltaTime);
+
+        /*for (int i = 0; i < 3; i++)
+        {
+            var orbit = camera.m_Orbits[i];
+
+            orbit.m_Height = cameraHeight;
+            orbit.m_Radius = cameraDistance;
+        }*/
     }
 
     private void SetCinemachineNoiseIntensity(float magnitude)
     {
         for(int i = 0; i < 3; i++)
         {
-            Debug.Log("SetCinemachineNoiseIntensity : i = " + i);
             var rig = camera.GetRig(i);
             //rig.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = .5f + magnitude / maxRunningSpeed;
 
@@ -283,6 +329,17 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         fsm.Update();
+
+        if (biasOffset == null) return;
+        if (biasOffset.startTime + biasOffset.duration >= Time.time)
+        {
+            camera.m_XAxis.Value += ((biasOffset.offset - biasOffset.startingBias) / biasOffset.duration) * Time.deltaTime;
+            //camera.m_Heading.m_Bias =;
+        }
+        /*else if (biasOffset.startTime + biasOffset.duration + 0.1f >= Time.time)
+        {
+            camera.m_Heading.m_Bias = Mathf.Lerp(biasOffset.offset, 0f, (Time.time - biasOffset.startTime) / (biasOffset.duration + 0.1f));
+        }*/
     }
 
     private void RotatePlayer()
@@ -332,8 +389,8 @@ public class PlayerController : MonoBehaviour
     }
     void PlayAnimation(float speedX, float speedY)
     {
-        animator.SetFloat("Speed", Mathf.MoveTowards(animator.GetFloat("Speed"), speedY, .05f));
-        animator.SetFloat("SpeedX", Mathf.MoveTowards(animator.GetFloat("SpeedX"), speedX, .05f));
+        animator.SetFloat("Speed", Mathf.MoveTowards(animator.GetFloat("Speed"), speedY, .02f));
+        animator.SetFloat("SpeedX", Mathf.MoveTowards(animator.GetFloat("SpeedX"), speedX, .02f));
     }
 
     public void SetMove(Vector2 context)
@@ -413,5 +470,21 @@ public class PlayerController : MonoBehaviour
             fsm.SetCurrentState(fsm.GetState(MovementStatus.Fighting));
         else if(fsm.GetCurrentState().ID == MovementStatus.Fighting)
             fsm.SetCurrentState(fsm.GetState(MovementStatus.Walking));
+    }
+    [System.Serializable]
+    class BiasOffset
+    {
+        public float offset = 0f;
+        public float duration = 0f;
+        public float startTime = 0f;
+        public float startingBias = 0f;
+
+        public BiasOffset(float offset, float duration, float currentBias)
+        {
+            this.offset = offset;
+            this.duration = duration;
+            this.startTime = Time.time;
+            this.startingBias = currentBias;
+        }
     }
 }

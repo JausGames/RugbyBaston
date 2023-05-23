@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
 public class RootMotionExtractor : MonoBehaviour
 {
@@ -9,7 +8,7 @@ public class RootMotionExtractor : MonoBehaviour
     {
         //var clip = animator.GetCurrentAnimatorClipInfo(0)[0].clip;
 
-        var curveBindings = AnimationUtility.GetCurveBindings(clip);
+       /* var curveBindings = AnimationUtility.GetCurveBindings(clip);*/
 
         //var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         var currentRootMotionData = new AnimationClipRootMotionData();
@@ -17,7 +16,7 @@ public class RootMotionExtractor : MonoBehaviour
         currentRootMotionData.speed = speed;
         currentRootMotionData.clipName = clip.name;
 
-        foreach (var curveBinding in curveBindings)
+        /*foreach (var curveBinding in curveBindings)
         {
             if (curveBinding.propertyName.Contains("RootT.x")) currentRootMotionData.curvePosX = UnityEditor.AnimationUtility.GetEditorCurve(clip, curveBinding);
             if (curveBinding.propertyName.Contains("RootT.y")) currentRootMotionData.curvePosY = UnityEditor.AnimationUtility.GetEditorCurve(clip, curveBinding);
@@ -26,7 +25,7 @@ public class RootMotionExtractor : MonoBehaviour
             if (curveBinding.propertyName.Contains("RootQ.y")) currentRootMotionData.curveRotY = UnityEditor.AnimationUtility.GetEditorCurve(clip, curveBinding);
             if (curveBinding.propertyName.Contains("RootQ.z")) currentRootMotionData.curveRotZ = UnityEditor.AnimationUtility.GetEditorCurve(clip, curveBinding);
             if (curveBinding.propertyName.Contains("RootQ.w")) currentRootMotionData.curveRotW = UnityEditor.AnimationUtility.GetEditorCurve(clip, curveBinding);
-        }
+        }*/
 
         //xRot = currentRootMotionData.curvePosX.Evaluate(clip.length) currentRootMotionData.curveRotX.Evaluate(0)
 
