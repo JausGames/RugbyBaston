@@ -645,7 +645,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47da1457220412347a4d1e45f15bec03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  finalBias: -5
+  finalBias: -10
   duration: 0.2
   useClip: 0
   clip: {fileID: 0}
@@ -796,7 +796,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47da1457220412347a4d1e45f15bec03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  finalBias: 40
+  finalBias: 52
   duration: 0
   useClip: 1
   clip: {fileID: -6465100338671206992, guid: 095702a5d5af244469a31c2526e10676, type: 3}

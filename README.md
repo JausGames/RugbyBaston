@@ -1,8 +1,20 @@
 # RugbyBaston
 
-RootMotion set on all animations
+## To do
 
-But for the spin, the camera will spin aswell. 
-Should probably put the target somewhere else and script his rotation when needed
+### Controller : Ball handler
 
-But for now baking the animation clip rotation in settings is enough to test.
+*   [ ] Add sounds
+*   [ ] Slow run strafe animations
+*   [ ] Ball handler avatar mask (or animations ? or IK ?)
+
+### Controller : Chaser
+
+*   [ ] Attack animations
+    *   [ ] Charge
+    *   [ ] Takedown
+    *   [ ] Legs dive
+*   [ ] Hit states & animations (KB, KO, KD)
+    *   [ ] KnockBack
+    *   [ ] KnockOut
+    *   [ ] KnockDown
