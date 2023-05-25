@@ -87,4 +87,11 @@ public class FiniteStateMachine<T>
                 mCurrentState.FixedUpdate();
             }
         }
+        public void LateUpdate()
+        {
+            if (mCurrentState != null)
+            {
+                mCurrentState.LateUpdate();
+            }
+        }
     }

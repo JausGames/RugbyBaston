@@ -49,29 +49,34 @@ public class State<T>
         public DelegateNoArg OnExit;
         public DelegateNoArg OnUpdate;
         public DelegateNoArg OnFixedUpdate;
+        public DelegateNoArg OnLateUpdate;
 
         public State(T id,
             DelegateNoArg onEnter,
             DelegateNoArg onExit = null,
             DelegateNoArg onUpdate = null,
-            DelegateNoArg onFixedUpdate = null) : this(id)
+            DelegateNoArg onFixedUpdate = null,
+            DelegateNoArg onLateUpdate = null) : this(id)
         {
             OnEnter = onEnter;
             OnExit = onExit;
             OnUpdate = onUpdate;
             OnFixedUpdate = onFixedUpdate;
+            OnLateUpdate = onLateUpdate;
         }
         public State(T id,
             string name,
             DelegateNoArg onEnter,
             DelegateNoArg onExit = null,
             DelegateNoArg onUpdate = null,
-            DelegateNoArg onFixedUpdate = null) : this(id, name)
+            DelegateNoArg onFixedUpdate = null,
+            DelegateNoArg onLateUpdate = null) : this(id, name)
         {
             OnEnter = onEnter;
             OnExit = onExit;
             OnUpdate = onUpdate;
             OnFixedUpdate = onFixedUpdate;
+            OnLateUpdate = onLateUpdate;
         }
 
         virtual public void Enter()
@@ -91,5 +96,9 @@ public class State<T>
         virtual public void FixedUpdate()
         {
             OnFixedUpdate?.Invoke();
+        }
+        virtual public void LateUpdate()
+        {
+            OnLateUpdate?.Invoke();
         }
     }

@@ -14,4 +14,9 @@ public class PlayerAnimationEvent : MonoBehaviour
     {
         controller.CanCancel = false;
     }
+
+    void PlayFootStepSoundEvent()
+    {
+        controller.SoundManager.PlayFootstep();
+    }
 }

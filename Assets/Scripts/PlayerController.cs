@@ -10,10 +10,6 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Running")]
     [SerializeField] float maxRunningSpeed = 15f;
-    [SerializeField] float runningVelocity = .8f;
-    [SerializeField] float runningBrake = 1.5f;
-    [SerializeField] float runningDirBrakePow = .01f;
-    [SerializeField] float runningReDirectionForce = .4f;
     [SerializeField] CinemachineFreeLook camera;
     [SerializeField] VisualEffect vfx;
 
@@ -42,27 +38,23 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private FiniteStateMachine<MovementStatus> fsm;
     private bool canCancel;
 
-    // start : Old root motion system, can be deleted
-    private bool rootmotion;
-    private AnimationClipRootMotionData currentRootMotionData;
-    private bool animationHasBegun;
     private bool tryRun;
-    private Vector3 baseVisualRotation;
-     private Quaternion baseRotation;
-    private float differenceAngle;
-    // end
 
     [SerializeField] private bool keepRecenteringDisable;
     private BiasOffset biasOffset;
+
+    [SerializeField] PlayerSoundManager soundManager;
+    [SerializeField] Transform rootBone;
+    [SerializeField] private float desiredRootBoneRotation;
 
     public bool Running { get => fsm.GetCurrentState().ID == MovementStatus.Running;}
 
 
     public bool Walking { get => fsm.GetCurrentState().ID == MovementStatus.Walking; }
     public bool Fighting { get => fsm.GetCurrentState().ID == MovementStatus.Fighting; }
-    public bool Rootmotion { get => rootmotion; set => rootmotion = value; }
     public bool CanCancel { get => canCancel; set => canCancel = value; }
     public bool TryRun { get => tryRun; }
+    public PlayerSoundManager SoundManager { get => soundManager; }
 
     public enum MovementStatus
     {
@@ -101,6 +93,9 @@ public class PlayerController : MonoBehaviour
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
                 PlayAnimation(move.x / 2f, move.y / 2f);
                 UpdateVfx();
+            },
+            delegate {
+                    RotateRootBone(animator.GetFloat("SpeedX"));
             });
         walk.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Running,
@@ -123,9 +118,13 @@ public class PlayerController : MonoBehaviour
                 RotatePlayer();
                 //ChangeVelocity(maxRunningSpeed, runningVelocity, runningReDirectionForce, runningDirBrakePow);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
-                PlayAnimation(move.x, move.y);
+                PlayAnimation(move.x, 1f);
                 UpdateVfx();
+            },
+            delegate {
+                RotateRootBone(animator.GetFloat("SpeedX"));
             });
+
         run.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Walking,
         MovementStatus.Fighting,
@@ -146,6 +145,10 @@ public class PlayerController : MonoBehaviour
                 //ChangeVelocityTwoDirection(maxFightingSpeed, fightingVelocity, fightingDirBrakePow);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
                 PlayAnimation(move.x, move.y);
+            },
+            delegate {
+                if(desiredRootBoneRotation != 0f)
+                    RotateRootBone(0f);
             });
         fight.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Walking,
@@ -165,6 +168,10 @@ public class PlayerController : MonoBehaviour
             delegate {
                 //ApplyRootMotion(true);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
+            },
+            delegate {
+                if (desiredRootBoneRotation != 0f)
+                    RotateRootBone(0f);
             });
         hurdle.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Walking,
@@ -185,6 +192,10 @@ public class PlayerController : MonoBehaviour
             delegate {
                 //ApplyRootMotion(false);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
+            },
+            delegate {
+                if (desiredRootBoneRotation != 0f)
+                    RotateRootBone(0f);
             });
         spin.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Walking,
@@ -203,6 +214,10 @@ public class PlayerController : MonoBehaviour
             delegate {
                 //ApplyRootMotion(false);
                 SetCinemachineNoiseIntensity(body.velocity.magnitude);
+            },
+            delegate {
+                if (desiredRootBoneRotation != 0f)
+                    RotateRootBone(0f);
             });
         juke.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Walking,
@@ -218,6 +233,7 @@ public class PlayerController : MonoBehaviour
         fsm.SetCurrentState(walk);
     }
 
+
     private void UpdateVfx()
     {
         var minSpeed = 4.4f;
@@ -232,8 +248,8 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            vfx.SetFloat("SpawnRate", Mathf.MoveTowards(vfx.GetFloat("SpawnRate"), 0f, 120f * Time.deltaTime));
-            vfx.SetVector2("YScaleRange", Vector2.MoveTowards(vfx.GetVector2("YScaleRange"), new Vector2(.05f, .1f), 0.90f * Time.deltaTime));
+            vfx.SetFloat("SpawnRate", Mathf.MoveTowards(vfx.GetFloat("SpawnRate"), 0f, 250f * Time.deltaTime));
+            vfx.SetVector2("YScaleRange", Vector2.MoveTowards(vfx.GetVector2("YScaleRange"), new Vector2(.05f, .1f), 1.75f * Time.deltaTime));
         }
 
         //Debug.Log("Value = " + value);
@@ -344,11 +360,12 @@ public class PlayerController : MonoBehaviour
 
     private void RotatePlayer()
     {
+        Debug.Log("running speed = " + body.velocity.magnitude);
         float rotation = Running ? move.x * (rotationSpeed * rotationBySpeed.Evaluate(body.velocity.magnitude / maxRunningSpeed)) : move.x * rotationSpeed;
         body.transform.rotation *= Quaternion.Euler(0f, rotation, 0f);
     }
 
-    private void ChangeVelocity(float maxSpeed, float force, float reDirectionForce, float dirBrakePow = 0f)
+    /*private void ChangeVelocity(float maxSpeed, float force, float reDirectionForce, float dirBrakePow = 0f)
     {
         var dirBrake = (1f + Vector3.Dot(new Vector3(body.velocity.x, 0f, body.velocity.z).normalized, (body.transform.right * move.x + body.transform.forward * move.y).normalized)) / 2f;
 
@@ -386,11 +403,21 @@ public class PlayerController : MonoBehaviour
 
         if (body.velocity.magnitude > maxSpeed * move.magnitude)
             body.velocity = body.velocity.normalized * maxSpeed * move.magnitude;
-    }
+    }*/
     void PlayAnimation(float speedX, float speedY)
     {
         animator.SetFloat("Speed", Mathf.MoveTowards(animator.GetFloat("Speed"), speedY, .02f));
-        animator.SetFloat("SpeedX", Mathf.MoveTowards(animator.GetFloat("SpeedX"), speedX, .02f));
+        animator.SetFloat("SpeedX", Mathf.MoveTowards(animator.GetFloat("SpeedX"), speedX, .08f));
+    }
+    private void LateUpdate()
+    {
+        fsm.LateUpdate();
+    }
+
+    private void RotateRootBone(float target)
+    {
+        desiredRootBoneRotation = Mathf.MoveTowards(desiredRootBoneRotation, target, .08f);
+        rootBone.localEulerAngles = new Vector3(rootBone.localEulerAngles.x, desiredRootBoneRotation * 10f, rootBone.localEulerAngles.z);
     }
 
     public void SetMove(Vector2 context)
@@ -486,5 +513,23 @@ public class PlayerController : MonoBehaviour
             this.startTime = Time.time;
             this.startingBias = currentBias;
         }
+    }
+}
+[System.Serializable]
+public class PlayerSoundManager
+{
+    [SerializeField] private AudioClip[] walkClips;
+    [SerializeField] private AudioClip[] runClips;
+
+    [SerializeField] private AudioSource audioSource;
+
+
+    internal void PlayFootstep()
+    {
+        audioSource.clip = walkClips[UnityEngine.Random.Range(0, walkClips.Length)];
+        audioSource.Play();
+
+        /*audioSource.Stop();
+        audioSource.PlayOneShot(walkClips[UnityEngine.Random.Range(0, walkClips.Length)]);*/
     }
 }
