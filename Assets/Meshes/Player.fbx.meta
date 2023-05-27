@@ -360,6 +360,26 @@ ModelImporter:
       that will be discarded.\n\t'DEF-foot.L' has scale animation that will be discarded.\n\t'DEF-thigh.R'
       has scale animation that will be discarded.\n\t'DEF-shin.R' has scale animation
       that will be discarded.\n\t'DEF-foot.R' has scale animation that will be discarded.\n\nClip
+      'rig|Strafe left' has import animation warnings that might lower retargeting
+      quality:\nNote: Activate translation DOF on avatar to improve retargeting quality.\n\t'DEF-upper_arm.L'
+      has scale animation that will be discarded.\n\t'DEF-forearm.L' has scale animation
+      that will be discarded.\n\t'DEF-hand.L' has scale animation that will be discarded.\n\t'DEF-upper_arm.R'
+      has scale animation that will be discarded.\n\t'DEF-forearm.R' has scale animation
+      that will be discarded.\n\t'DEF-hand.R' has scale animation that will be discarded.\n\t'DEF-thigh.L'
+      has scale animation that will be discarded.\n\t'DEF-shin.L' has scale animation
+      that will be discarded.\n\t'DEF-foot.L' has scale animation that will be discarded.\n\t'DEF-thigh.R'
+      has scale animation that will be discarded.\n\t'DEF-shin.R' has scale animation
+      that will be discarded.\n\t'DEF-foot.R' has scale animation that will be discarded.\n\nClip
+      'rig|Strafe right' has import animation warnings that might lower retargeting
+      quality:\nNote: Activate translation DOF on avatar to improve retargeting quality.\n\t'DEF-upper_arm.L'
+      has scale animation that will be discarded.\n\t'DEF-forearm.L' has scale animation
+      that will be discarded.\n\t'DEF-hand.L' has scale animation that will be discarded.\n\t'DEF-upper_arm.R'
+      has scale animation that will be discarded.\n\t'DEF-forearm.R' has scale animation
+      that will be discarded.\n\t'DEF-hand.R' has scale animation that will be discarded.\n\t'DEF-thigh.L'
+      has scale animation that will be discarded.\n\t'DEF-shin.L' has scale animation
+      that will be discarded.\n\t'DEF-foot.L' has scale animation that will be discarded.\n\t'DEF-thigh.R'
+      has scale animation that will be discarded.\n\t'DEF-shin.R' has scale animation
+      that will be discarded.\n\t'DEF-foot.R' has scale animation that will be discarded.\n\nClip
       'rig|Walk' has import animation warnings that might lower retargeting quality:\nNote:
       Activate translation DOF on avatar to improve retargeting quality.\n\t'DEF-spine.004'
       is inbetween humanoid transforms and has rotation animation that will be discarded.\n\t'DEF-forearm.L'
@@ -535,11 +555,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: rig|Run strafe overr left
-      takeName: rig|Run strafe overr left
+      name: rig|Strafe left
+      takeName: rig|Strafe left
       internalID: 0
       firstFrame: 0
-      lastFrame: 1
+      lastFrame: 26
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -564,11 +584,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: rig|Run strafe overr right
-      takeName: rig|Run strafe overr right
+      name: rig|Strafe right
+      takeName: rig|Strafe right
       internalID: 0
       firstFrame: 0
-      lastFrame: 1
+      lastFrame: 26
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -1028,8 +1048,29 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
+      - time: 0.10774647
+        functionName: PlayFootStepSoundEvent
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: cdaa520f75042ff428270c5ea37eaab9, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       - time: 0.18695652
         functionName: CantBeCancelAnymore
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: cdaa520f75042ff428270c5ea37eaab9, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.49085456
+        functionName: PlayFootStepSoundEvent
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: cdaa520f75042ff428270c5ea37eaab9, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.79074013
+        functionName: PlayFootStepSoundEvent
         data: 
         objectReferenceParameter: {fileID: 11500000, guid: cdaa520f75042ff428270c5ea37eaab9, type: 3}
         floatParameter: 0

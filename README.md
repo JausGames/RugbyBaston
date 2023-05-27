@@ -13,7 +13,7 @@
 *   [x] Run & Slow pace strafe tilt
     *   By rotating *root* bone in LateUpdate event of fsm State
 
-*   [ ] Strafe animations
+*   [x] Static rotation animations
 *   [ ] Ball handler avatar mask (or animations ? or IK ?)
 
 ### Controller : Chaser
