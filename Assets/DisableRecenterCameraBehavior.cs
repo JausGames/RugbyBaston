@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DisableRecenterCameraBehavior : StateMachineBehaviour
 {
-    private PlayerController controller;
+    private PlayerCameraController controller;
     [SerializeField] float finalBias = 0f;
     [SerializeField] float duration = 0f;
     [SerializeField] bool useClip = false;
@@ -14,8 +14,8 @@ public class DisableRecenterCameraBehavior : StateMachineBehaviour
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if (!controller)
-            controller = animator.GetComponentInParent<PlayerController>();
+        if (controller == null)
+            controller = animator.GetComponentInParent<PlayerCameraController>();
 
         controller.SetBiasOffset(finalBias, useClip ? clip.length : duration);
     }

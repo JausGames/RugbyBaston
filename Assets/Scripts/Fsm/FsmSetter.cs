@@ -4,7 +4,7 @@ using static PlayerController;
 
 public static class FsmSetter
 {
-    static public  FiniteStateMachine<MovementStatus> SetUpControllerFsm(PlayerController controller, Rigidbody body, Animator animator)
+    static public  FiniteStateMachine<MovementStatus> SetUpControllerFsm(PlayerController controller, Rigidbody body, PlayerAnimatorController animator, PlayerCameraController camera)
     {
         var fsm = new FiniteStateMachine<MovementStatus>();
 
@@ -12,29 +12,29 @@ public static class FsmSetter
 
             delegate
             {
-                controller.SetAnimationLayer(MovementStatus.Walking);
-                controller.SetRecenteringCamera(true);
+                animator.SetAnimationLayer(MovementStatus.Walking);
+                camera.SetRecenteringCamera(true);
             },
             null,
             delegate
             {
-                controller.UpdateCamera(.1f);
+                camera.UpdateCamera(.1f);
             },
             delegate
             {
-                if (animator.GetFloat("Speed") != 0f || controller.Move.y != 0)
+                if (animator.GetSpeed() != 0f || controller.Move.y != 0)
                     controller.RotatePlayer();
 
-                var animX = (animator.GetFloat("Speed") == 0f) && (controller.Move.y == 0) ? controller.Move.x : controller.Move.x / 2f;
+                var animX = (animator.GetSpeed() == 0f) && (controller.Move.y == 0) ? controller.Move.x : controller.Move.x / 2f;
 
-                controller.PlayAnimation(animX, controller.Move.y / 2f);
+                animator.PlayLocomotion(animX, controller.Move.y / 2f);
 
-                controller.SetCinemachineNoiseIntensity(body.velocity.magnitude);
+                camera.SetCinemachineNoiseIntensity(body.velocity.magnitude, controller.MaxRunningSpeed);
                 controller.UpdateVfx();
             },
             delegate
             {
-                controller.RotateRootBone(controller.Move.y == 0 ? 0f : animator.GetFloat("SpeedX"));
+                controller.RotateRootBone(controller.Move.y == 0 ? 0f : animator.GetSpeedX());
             });
         walk.TransitionAllowedList.AddRange(new MovementStatus[]{
         MovementStatus.Running,
@@ -46,26 +46,26 @@ public static class FsmSetter
 
             delegate
             {
-                controller.SetAnimationLayer(MovementStatus.Running);
-                controller.SetRecenteringCamera(true);
+                animator.SetAnimationLayer(MovementStatus.Running);
+                camera.SetRecenteringCamera(true);
             },
             null,
             delegate
             {
-                controller.UpdateCamera(.1f, 2.2f, 1.9f);
+                camera.UpdateCamera(.1f, 2.2f, 1.9f);
             },
             delegate
             {
                 //ApplyRootMotion(true);
                 controller.RotatePlayer();
                 //ChangeVelocity(maxRunningSpeed, runningVelocity, runningReDirectionForce, runningDirBrakePow);
-                controller.SetCinemachineNoiseIntensity(body.velocity.magnitude);
-                controller.PlayAnimation(controller.Move.x, 1f);
+                camera.SetCinemachineNoiseIntensity(body.velocity.magnitude, controller.MaxRunningSpeed);
+                animator.PlayLocomotion(controller.Move.x, 1f);
                 controller.UpdateVfx();
             },
             delegate
             {
-                controller.RotateRootBone(animator.GetFloat("SpeedX"));
+                controller.RotateRootBone(animator.GetSpeedX());
             });
 
         run.TransitionAllowedList.AddRange(new MovementStatus[]{
@@ -78,19 +78,19 @@ public static class FsmSetter
         var fight = new State<MovementStatus>(MovementStatus.Fighting, "Fighting",
             delegate
             {
-                controller.SetAnimationLayer(MovementStatus.Fighting);
-                controller.SetRecenteringCamera(true);
+                animator.SetAnimationLayer(MovementStatus.Fighting);
+                camera.SetRecenteringCamera(true);
             },
             null,
             delegate
             {
-                controller.UpdateCamera(.1f);
+                camera.UpdateCamera(.1f);
             },
             delegate
             {
                 //ChangeVelocityTwoDirection(maxFightingSpeed, fightingVelocity, fightingDirBrakePow);
-                controller.SetCinemachineNoiseIntensity(body.velocity.magnitude);
-                controller.PlayAnimation(controller.Move.x, controller.Move.y);
+                camera.SetCinemachineNoiseIntensity(body.velocity.magnitude, controller.MaxRunningSpeed);
+                animator.PlayLocomotion(controller.Move.x, controller.Move.y);
             },
             delegate
             {
@@ -105,19 +105,19 @@ public static class FsmSetter
         var hurdle = new State<MovementStatus>(MovementStatus.Hurdle, "Hurdle",
             delegate
             {
-                controller.SetAnimationLayer(MovementStatus.Walking);
-                animator.SetTrigger("Hurdle");
+                animator.SetAnimationLayer(MovementStatus.Walking);
+                animator.PlayHurdle();
             },
             null,
             delegate
             {
-                controller.UpdateCamera(2f);
+                camera.UpdateCamera(2f);
                 controller.UpdateVfx();
             },
             delegate
             {
                 //ApplyRootMotion(true);
-                controller.SetCinemachineNoiseIntensity(body.velocity.magnitude);
+                camera.SetCinemachineNoiseIntensity(body.velocity.magnitude, controller.MaxRunningSpeed);
             },
             delegate
             {
@@ -131,21 +131,21 @@ public static class FsmSetter
         var spin = new State<MovementStatus>(MovementStatus.Spin, "Spin",
             delegate
             {
-                controller.SetAnimationLayer(MovementStatus.Walking);
-                animator.SetTrigger("SpinR");
-                controller.UpdateCamera(2f);
-                controller.SetRecenteringCamera(false);
+                animator.SetAnimationLayer(MovementStatus.Walking);
+                animator.PlaySpinR();
+                camera.UpdateCamera(2f);
+                camera.SetRecenteringCamera(false);
             },
             null,
             delegate
             {
-                controller.UpdateCamera(2f);
+                camera.UpdateCamera(2f);
                 controller.UpdateVfx();
             },
             delegate
             {
                 //ApplyRootMotion(false);
-                controller.SetCinemachineNoiseIntensity(body.velocity.magnitude);
+                camera.SetCinemachineNoiseIntensity(body.velocity.magnitude, controller.MaxRunningSpeed);
             },
             delegate
             {
@@ -159,19 +159,19 @@ public static class FsmSetter
         var juke = new State<MovementStatus>(MovementStatus.Juke, "Juke",
             delegate
             {
-                controller.SetAnimationLayer(MovementStatus.Walking);
-                animator.SetTrigger("Juke");
+                animator.SetAnimationLayer(MovementStatus.Walking);
+                animator.PlayJukeBack();
             },
             null,
             delegate
             {
-                controller.UpdateCamera(2f);
+                camera.UpdateCamera(2f);
                 controller.UpdateVfx();
             },
             delegate
             {
                 //ApplyRootMotion(false);
-                controller.SetCinemachineNoiseIntensity(body.velocity.magnitude);
+                camera.SetCinemachineNoiseIntensity(body.velocity.magnitude, controller.MaxRunningSpeed);
             },
             delegate
             {

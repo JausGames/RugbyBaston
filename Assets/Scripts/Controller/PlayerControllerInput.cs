@@ -51,7 +51,7 @@ public class PlayerControllerInput : MonoBehaviour
         }
         else if (context && controller.CanCancel && controller.Fsm.GetCurrentState().ID == MovementStatus.Hurdle)
         {
-            controller.Animator.SetTrigger("Cancel");
+            controller.Animator.PlayCancel();
         }
     }
     internal void SetXMove(bool context)
@@ -65,7 +65,7 @@ public class PlayerControllerInput : MonoBehaviour
         }
         else if (context && controller.CanCancel && controller.Fsm.GetCurrentState().ID == MovementStatus.Spin)
         {
-            controller.Animator.SetTrigger("Cancel");
+            controller.Animator.PlayCancel();
         }
     }
 
@@ -81,7 +81,7 @@ public class PlayerControllerInput : MonoBehaviour
 
         else if (context && controller.CanCancel && controller.Fsm.GetCurrentState().ID == MovementStatus.Juke)
         {
-            controller.Animator.SetTrigger("Cancel");
+            controller.Animator.PlayCancel();
         }
     }
     public void SetFight(bool context)
