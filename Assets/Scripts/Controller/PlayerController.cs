@@ -61,6 +61,10 @@ public partial class PlayerController : MonoBehaviour
         camera = GetComponentInChildren<PlayerCameraController>();
         animator = new PlayerAnimatorController(GetComponentInChildren<Animator>());
 
+    }
+    private void Start()
+    {
+
         fsm = FsmSetter.SetUpControllerFsm(this, body, animator, camera);
     }
 

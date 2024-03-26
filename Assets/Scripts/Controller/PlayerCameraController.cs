@@ -18,7 +18,6 @@ using UnityEngine;
             if (biasOffset.startTime + biasOffset.duration >= Time.time)
             {
                 camera.m_XAxis.Value += ((biasOffset.offset - biasOffset.startingBias) / biasOffset.duration) * Time.deltaTime;
-                //camera.m_Heading.m_Bias =;
             }
         }
         public void UpdateCamera(float horizontalDamping, float cameraDistance = 4.2f, float cameraHeight = 2.6f)

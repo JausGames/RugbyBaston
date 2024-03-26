@@ -22,7 +22,7 @@ public class SetControllerStateBehavior : StateMachineBehaviour
             controller.SetState(PlayerController.MovementStatus.Walking);
 
 
-        camera.SetBiasOffset(0f, 0.1f);
+        //camera.SetBiasOffset(0f, 0.1f);
     }
 
     // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
